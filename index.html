@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <title>Max Perez</title>
+        <style>
+            #container {
+                font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                text-align: center;
+                min-height: 50vh;
+            }
+            #demo{
+                text-align: center;
+            }
+            #headlines {
+                background-color: darkslategrey;
+                color:lightblue;
+                /* width:60%; */
+                text-align: center;
+            }
+            #dateline {
+                /* width:60%; */
+                text-align: center;
+                color:lightblue;
+            }
+            #form {
+                color:lightblue;
+                background-color: darkslategrey;
+                /* width:60%; */
+                text-align: center;
+            }
+            table {
+                border-collapse: collapse;
+                /* border: 1px solid black; */
+                padding:none;
+                margin:none;
+                vertical-align: top;
+            }
+            #outer_table {
+                border:none;
+                padding:none;
+                margin:none;
+                border-collapse: collapse;
+                text-align: center;
+                width:auto;
+                vertical-align: top;
+            }
+            .obs_table {
+                border:none;
+                padding:none;
+                margin:none;
+                border-collapse: collapse;
+                vertical-align: top;
+            }
+            .obs_table td {
+                padding:10px;
+                width:190px;
+            }
+            th {
+                background-color: gray;
+                vertical-align: top;
+            }
+        
+        </style>
+    </head>
+    <body>
+        <div id="container">
+
+            <div id="demo"></div>
+            
+            <script>
+                var displayZipForm = false;
+                var x = document.getElementById("demo");
+                var zip = getZipFromHref();
+                getLocation();
+
+                function getLocation() {
+                    if (navigator.geolocation || zip) {
+                        navigator.geolocation.getCurrentPosition(getForecast);
+                        // showZipForm();
+                    } else { 
+                        x.innerHTML = "Geolocation is not supported by this browser.";
+                        showZipForm();
+                    }
+                }
+
+                function getZipFromHref(){
+                    var url_string = window.location.href;
+                    var url = new URL(url_string);
+                    getZip = url.searchParams.get("zip");
+                    return getZip;
+                }
+
+                function getClockTime(dateIn){
+                var hour   = dateIn.getHours();
+                var minute = dateIn.getMinutes();
+                var second = dateIn.getSeconds();
+                var ap = "a";
+                if (hour   > 11) { ap = "p";             }
+                if (hour   > 12) { hour = hour - 12;      }
+                if (hour   == 0) { hour = 12;             }
+                //if (hour   < 10) { hour   = "0" + hour;   }
+                
+                var timeString = hour + " " + ap;
+                return timeString;
+                }
+
+                function getForecast(position) {
+
+                    // Create a request variable and assign a new XMLHttpRequest object to it.
+                    var request = new XMLHttpRequest();
+
+                    // api key: d129f32cd1be7ffd5e072113afdd2d7a
+                    // api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid=d129f32cd1be7ffd5e072113afdd2d7a
+                    // http://samples.openweathermap.org/data/2.5/forecast?id=524901&appid=d129f32cd1be7ffd5e072113afdd2d7a 
+
+                    if (zip) {
+                        request.open('GET', 'https://api.openweathermap.org/data/2.5/forecast?zip=' + zip + ',us&appid=d129f32cd1be7ffd5e072113afdd2d7a&units=imperial', true);
+                    } else {
+                        // Open a new connection, using the GET request on the URL endpoint
+                        request.open('GET', 'https://api.openweathermap.org/data/2.5/forecast?lat=' + position.coords.latitude + '&lon='  + position.coords.longitude + '&appid=d129f32cd1be7ffd5e072113afdd2d7a&units=imperial', true);
+                    }
+                    request.send();
+
+                    request.onload = function () {
+                        // Begin accessing JSON data here
+                        var data = JSON.parse(this.response);
+                        console.log('data: ',data);
+                        var dStart = new Date(data.list[0].dt * 1000);
+                        var headlines = '<div id="headlines"><h4>We Found You In</h4><h1> ' + data.city.name + '</h1><h4 onClick="showZipForm()">Not Here?</h4></div>';
+                        headlines += '<div id="dateline"><h2>' + dStart + '</h2></div>';
+                        
+                        x.innerHTML += headlines;
+                        
+                        
+                        var forecastTable = '<div id="ziptable"><table id="outer_table"><tr>';
+                        for ( i=0; i<data.list.length; i++ ){
+                            fTime = new Date(data.list[i].dt * 1000);
+                            if (dStart.getDay() == fTime.getDay()){
+                                forecastTable += '<td><table class="obs_table"><tr><th>' + getClockTime(fTime) + '</th></tr><tr><td> ' + data.list[i].main.temp + '&deg</td></tr><tr><td> ' + data.list[i].weather[0].description  + '</td></tr></table></td>';
+                            }
+                        }
+                        forecastTable += '</tr></table></div>';
+                        x.innerHTML += forecastTable;
+                    }
+                }
+
+                function showZipForm(){
+                    var zipForm = '\
+                    <div id="form">\
+                    <h3>Enter your Zip Code</h3>\
+                    <form action="#">\
+                        <input type="text" name="zip"></h3>\
+                        <br>\
+                        <input type="submit" value="Submit">\
+                    </form>\
+                    </div>';
+                    x.innerHTML += zipForm;
+                }
+            </script>
+            
+        </div>
+    </body>
+</html>
