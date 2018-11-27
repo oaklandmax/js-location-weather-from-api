@@ -1,5 +1,7 @@
 
-# What to Build
+This can be viewed at https://codepen.io/oaklandmax/pen/ePYJLL
+
+What to Build
 
 Create the following single page application, based on the mockup attached.
 
